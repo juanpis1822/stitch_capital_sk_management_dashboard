@@ -67,6 +67,7 @@ export default function DashboardEntrenador() {
                   <th className="px-6 py-4">Deportista</th>
                   <th className="px-6 py-4">Categoría</th>
                   <th className="px-6 py-4">Estado Asistencia</th>
+                  <th className="px-6 py-4">Acción</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-700/50">
@@ -86,10 +87,18 @@ export default function DashboardEntrenador() {
                         {row.estado_asistencia || 'Pendiente'}
                       </span>
                     </td>
+                    <td className="px-6 py-4">
+                      <button 
+                        onClick={() => alert("Para guardar esto en la base de datos, la Vista_Entrenador necesita devolver el 'id_asistencia'. ¡Pero la UI está lista para conectarse!")}
+                        className="text-xs bg-primary/20 hover:bg-primary/40 text-primary px-3 py-1.5 rounded-lg transition-colors font-medium border border-primary/30"
+                      >
+                        Marcar Asistencia
+                      </button>
+                    </td>
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan="6" className="px-6 py-8 text-center text-slate-500">
+                    <td colSpan="7" className="px-6 py-8 text-center text-slate-500">
                       No hay clases programadas para mostrar.
                     </td>
                   </tr>

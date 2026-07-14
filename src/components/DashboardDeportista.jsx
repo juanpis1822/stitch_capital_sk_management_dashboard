@@ -40,13 +40,29 @@ export default function DashboardDeportista() {
         throw error;
       }
       
-      setPerfil(data || {
+      let perfilData = data || {
         nombre: 'Usuario',
         categoria: 'N/A',
         nombre_plan: 'N/A',
         estado_pago: 'N/A',
         total_clases_asistidas: 0
-      });
+      };
+
+      // 3. Buscar el total de clases del plan para saber cuántas le quedan
+      if (perfilData.nombre_plan !== 'N/A') {
+        const { data: planData } = await supabase
+          .from('PLAN')
+          .select('numero_clases_incluidas')
+          .eq('nombre_plan', perfilData.nombre_plan)
+          .single();
+        
+        if (planData) {
+          perfilData.clases_incluidas = planData.numero_clases_incluidas;
+          perfilData.clases_restantes = planData.numero_clases_incluidas - perfilData.total_clases_asistidas;
+        }
+      }
+      
+      setPerfil(perfilData);
 
     } catch (error) {
       console.error('Error fetching data:', error.message);
@@ -121,7 +137,18 @@ export default function DashboardDeportista() {
             <p className="text-textMuted text-sm font-medium mb-1">Clases Asistidas</p>
             <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
               {perfil?.total_clases_asistidas || 0}
+              {perfil?.clases_incluidas && <span className="text-lg text-slate-500 font-medium"> / {perfil.clases_incluidas}</span>}
             </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-cardBg to-slate-800 p-6 rounded-2xl border border-slate-700/50 shadow-lg relative overflow-hidden">
+            <p className="text-textMuted text-sm font-medium mb-1">Clases Restantes</p>
+            <p className={`text-4xl font-black ${perfil?.clases_restantes <= 2 ? 'text-red-400' : 'text-blue-400'}`}>
+              {perfil?.clases_restantes !== undefined ? perfil.clases_restantes : '-'}
+            </p>
+            {perfil?.clases_restantes <= 2 && (
+              <p className="text-xs text-red-400/80 mt-2 font-medium">¡Pronto debes renovar!</p>
+            )}
           </div>
         </div>
       )}
