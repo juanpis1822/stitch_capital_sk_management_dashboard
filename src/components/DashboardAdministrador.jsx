@@ -1,15 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, DollarSign, Activity } from 'lucide-react';
+import { LogOut, Users, DollarSign, Activity, UserPlus, X } from 'lucide-react';
 
 export default function DashboardAdministrador() {
   const [datos, setDatos] = useState([]);
+  const [planes, setPlanes] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Estados para modales
+  const [showDeportistaModal, setShowDeportistaModal] = useState(false);
+  const [showEntrenadorModal, setShowEntrenadorModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchDatos();
+    fetchPlanes();
   }, []);
 
   const fetchDatos = async () => {
@@ -27,28 +35,110 @@ export default function DashboardAdministrador() {
     }
   };
 
+  const fetchPlanes = async () => {
+    try {
+      const { data, error } = await supabase.from('PLAN').select('*');
+      if (!error && data) {
+        setPlanes(data);
+      }
+    } catch (err) {
+      console.error("Error al cargar planes", err);
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/');
   };
 
+  const handleCrearDeportista = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(e.target);
+    const nuevoDeportista = {
+      nombre: formData.get('nombre'),
+      documento: formData.get('documento'),
+      edad: parseInt(formData.get('edad')),
+      categoria: formData.get('categoria'),
+      telefono: formData.get('telefono'),
+      correo: formData.get('correo'),
+      estado: 'activo',
+      PLAN_id_plan: parseInt(formData.get('plan_id'))
+    };
+
+    try {
+      // Necesitamos generar un id_deportista porque la tabla no tiene SERIAL por defecto en el SQL del usuario,
+      // pero si lo tiene, esto puede fallar. Asumiremos que el usuario usa SERIAL o autoincrement.
+      // Si falla, el usuario debe ajustar su SQL para que id_deportista sea autoincremental.
+      const { error } = await supabase.from('DEPORTISTA').insert([nuevoDeportista]);
+      if (error) throw error;
+      
+      alert("¡Deportista creado exitosamente!");
+      setShowDeportistaModal(false);
+      fetchDatos(); // Recargar la tabla
+    } catch (error) {
+      alert("Error al crear deportista: " + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCrearEntrenador = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(e.target);
+    const nuevoEntrenador = {
+      nombre: formData.get('nombre'),
+      documento: formData.get('documento'),
+      correo: formData.get('correo'),
+      telefono: formData.get('telefono')
+    };
+
+    try {
+      const { error } = await supabase.from('ENTRENADOR').insert([nuevoEntrenador]);
+      if (error) throw error;
+      
+      alert("¡Entrenador creado exitosamente!");
+      setShowEntrenadorModal(false);
+    } catch (error) {
+      alert("Error al crear entrenador: " + error.message + "\n\n¿Ya creaste la tabla ENTRENADOR en Supabase?");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background text-textMain p-6">
+    <div className="min-h-screen bg-background text-textMain p-6 relative">
       <header className="flex justify-between items-center mb-8 bg-cardBg p-4 rounded-2xl shadow-sm border border-slate-700/50">
         <div>
           <h1 className="text-2xl font-bold text-primary">Dashboard Administrador</h1>
           <p className="text-textMuted text-sm">Visión general del club Capital SK</p>
         </div>
-        <button 
-          onClick={handleLogout}
-          className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl transition-all border border-slate-700"
-        >
-          <LogOut size={18} />
-          <span>Cerrar Sesión</span>
-        </button>
+        <div className="flex gap-3">
+          <button 
+            onClick={() => setShowEntrenadorModal(true)}
+            className="flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 px-4 py-2 rounded-xl transition-all border border-blue-500/30 font-medium"
+          >
+            <UserPlus size={18} />
+            <span className="hidden md:inline">Crear Entrenador</span>
+          </button>
+          <button 
+            onClick={() => setShowDeportistaModal(true)}
+            className="flex items-center gap-2 bg-primary/20 hover:bg-primary/40 text-primary px-4 py-2 rounded-xl transition-all border border-primary/30 font-medium"
+          >
+            <UserPlus size={18} />
+            <span className="hidden md:inline">Crear Deportista</span>
+          </button>
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl transition-all border border-slate-700"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
       </header>
 
-      {/* Tarjetas de Resumen (Ejemplo visual) */}
+      {/* Tarjetas de Resumen */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-cardBg p-6 rounded-2xl border border-slate-700/50 shadow-sm flex items-center gap-4">
           <div className="p-4 bg-primary/20 text-primary rounded-xl">
@@ -109,7 +199,7 @@ export default function DashboardAdministrador() {
                     <td className="px-6 py-4">{row.documento}</td>
                     <td className="px-6 py-4 font-medium text-slate-200">{row.nombre_deportista}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs ${row.estado_deportista === 'Activo' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs ${row.estado_deportista === 'Activo' || row.estado_deportista === 'activo' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'}`}>
                         {row.estado_deportista}
                       </span>
                     </td>
@@ -119,7 +209,7 @@ export default function DashboardAdministrador() {
                     <td className="px-6 py-4">{row.mes}</td>
                     <td className="px-6 py-4">${row.valor_cobrado}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs ${row.estado_pago === 'Pagado' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs ${row.estado_pago === 'Pagado' || row.estado_pago === 'pagado' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
                         {row.estado_pago}
                       </span>
                     </td>
@@ -137,6 +227,95 @@ export default function DashboardAdministrador() {
           )}
         </div>
       </div>
+
+      {/* MODAL DEPORTISTA */}
+      {showDeportistaModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-cardBg border border-slate-700 p-6 rounded-2xl w-full max-w-md relative">
+            <button onClick={() => setShowDeportistaModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+              <X size={20} />
+            </button>
+            <h2 className="text-xl font-bold mb-4 text-primary">Registrar Deportista</h2>
+            <form onSubmit={handleCrearDeportista} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-textMuted mb-1">Nombre Completo</label>
+                  <input required name="nombre" type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="block text-xs text-textMuted mb-1">Documento</label>
+                  <input required name="documento" type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-textMuted mb-1">Edad</label>
+                  <input required name="edad" type="number" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="block text-xs text-textMuted mb-1">Categoría</label>
+                  <input required name="categoria" type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-textMuted mb-1">Teléfono</label>
+                  <input name="telefono" type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="block text-xs text-textMuted mb-1">Correo Electrónico</label>
+                  <input required name="correo" type="email" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-textMuted mb-1">Plan Inicial</label>
+                <select required name="plan_id" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary">
+                  <option value="">Selecciona un plan...</option>
+                  {planes.map(p => (
+                    <option key={p.id_plan} value={p.id_plan}>{p.nombre_plan} - ${p.valor_mensual}</option>
+                  ))}
+                </select>
+              </div>
+              <button disabled={isSubmitting} type="submit" className="w-full bg-primary hover:bg-emerald-400 text-slate-900 font-bold py-2 rounded-xl transition-colors mt-2">
+                {isSubmitting ? 'Guardando...' : 'Guardar Deportista'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL ENTRENADOR */}
+      {showEntrenadorModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-cardBg border border-slate-700 p-6 rounded-2xl w-full max-w-md relative">
+            <button onClick={() => setShowEntrenadorModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+              <X size={20} />
+            </button>
+            <h2 className="text-xl font-bold mb-4 text-blue-400">Registrar Entrenador</h2>
+            <form onSubmit={handleCrearEntrenador} className="space-y-4">
+              <div>
+                <label className="block text-xs text-textMuted mb-1">Nombre Completo</label>
+                <input required name="nombre" type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+              </div>
+              <div>
+                <label className="block text-xs text-textMuted mb-1">Documento</label>
+                <input required name="documento" type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+              </div>
+              <div>
+                <label className="block text-xs text-textMuted mb-1">Correo Electrónico</label>
+                <input required name="correo" type="email" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+              </div>
+              <div>
+                <label className="block text-xs text-textMuted mb-1">Teléfono</label>
+                <input name="telefono" type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+              </div>
+              <button disabled={isSubmitting} type="submit" className="w-full bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 rounded-xl transition-colors mt-2">
+                {isSubmitting ? 'Guardando...' : 'Guardar Entrenador'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
