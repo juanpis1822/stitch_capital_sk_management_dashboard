@@ -32,6 +32,31 @@ export default function DashboardEntrenador() {
     navigate('/');
   };
 
+  const toggleAsistencia = async (idAsistencia, estadoActual) => {
+    if (!idAsistencia) {
+      alert("¡Ups! Todavía falta agregar 'a.id_asistencia' en la Vista_Entrenador de Supabase.");
+      return;
+    }
+
+    const nuevoEstado = estadoActual === 'asistió' ? 'no asistió' : 'asistió';
+
+    // Actualización optimista en la interfaz gráfica
+    setClases(clases.map(c => c.id_asistencia === idAsistencia ? { ...c, estado_asistencia: nuevoEstado } : c));
+
+    // Actualización real en la base de datos
+    const { error } = await supabase
+      .from('ASISTENCIA')
+      .update({ estado_asistencia: nuevoEstado })
+      .eq('id_asistencia', idAsistencia);
+
+    if (error) {
+      console.error('Error actualizando asistencia:', error);
+      alert('Error al guardar en la base de datos: ' + error.message);
+      // Revertir en caso de error
+      setClases(clases.map(c => c.id_asistencia === idAsistencia ? { ...c, estado_asistencia: estadoActual } : c));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-textMain p-6">
       <header className="flex justify-between items-center mb-8 bg-cardBg p-4 rounded-2xl shadow-sm border border-slate-700/50">
@@ -83,16 +108,16 @@ export default function DashboardEntrenador() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs border ${row.estado_asistencia === 'Asistió' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs border ${row.estado_asistencia === 'asistió' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'}`}>
                         {row.estado_asistencia || 'Pendiente'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <button 
-                        onClick={() => alert("Para guardar esto en la base de datos, la Vista_Entrenador necesita devolver el 'id_asistencia'. ¡Pero la UI está lista para conectarse!")}
+                        onClick={() => toggleAsistencia(row.id_asistencia, row.estado_asistencia)}
                         className="text-xs bg-primary/20 hover:bg-primary/40 text-primary px-3 py-1.5 rounded-lg transition-colors font-medium border border-primary/30"
                       >
-                        Marcar Asistencia
+                        {row.estado_asistencia === 'asistió' ? 'Desmarcar' : 'Marcar Asistencia'}
                       </button>
                     </td>
                   </tr>
