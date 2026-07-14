@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Athlete Dashboard - Capital SK</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@400;700;800&amp;family=Hanken+Grotesk:wght@400;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-lowest": "#0b0f10",
+                      "secondary-container": "#c1a800",
+                      "on-tertiary-fixed": "#00174b",
+                      "on-tertiary-fixed-variant": "#003ea8",
+                      "inverse-surface": "#e0e3e5",
+                      "outline-variant": "#46464c",
+                      "tertiary": "#b4c5ff",
+                      "surface-tint": "#c1c6dc",
+                      "tertiary-fixed": "#dbe1ff",
+                      "on-tertiary": "#002a78",
+                      "on-error": "#690005",
+                      "primary-fixed-dim": "#c1c6dc",
+                      "inverse-on-surface": "#2d3133",
+                      "surface-bright": "#363a3b",
+                      "on-primary-fixed": "#151b2c",
+                      "surface-dim": "#101415",
+                      "on-surface-variant": "#c6c6cd",
+                      "on-primary": "#2a3041",
+                      "tertiary-container": "#000827",
+                      "tertiary-fixed-dim": "#b4c5ff",
+                      "secondary-fixed": "#ffe24c",
+                      "error": "#ffb4ab",
+                      "surface-container-low": "#191c1e",
+                      "on-secondary-container": "#483d00",
+                      "secondary-fixed-dim": "#e2c62d",
+                      "outline": "#909097",
+                      "surface": "#101415",
+                      "on-secondary-fixed-variant": "#524600",
+                      "on-primary-container": "#74798d",
+                      "secondary": "#e2c62d",
+                      "surface-container-high": "#272a2c",
+                      "on-tertiary-container": "#3870f8",
+                      "surface-variant": "#323537",
+                      "on-error-container": "#ffdad6",
+                      "on-surface": "#e0e3e5",
+                      "inverse-primary": "#585e71",
+                      "on-background": "#e0e3e5",
+                      "primary": "#c1c6dc",
+                      "background": "#101415",
+                      "primary-fixed": "#dde2f9",
+                      "surface-container-highest": "#323537",
+                      "on-secondary": "#393000",
+                      "primary-container": "#050a1a",
+                      "surface-container": "#1d2022",
+                      "error-container": "#93000a",
+                      "on-primary-fixed-variant": "#414659",
+                      "on-secondary-fixed": "#211b00"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-xs": "0.25rem",
+                      "margin-mobile": "1rem",
+                      "stack-lg": "2rem",
+                      "stack-sm": "0.5rem",
+                      "stack-md": "1rem",
+                      "gutter": "1.5rem",
+                      "container-max": "1280px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": ["Anybody"],
+                      "data-mono": ["JetBrains Mono"],
+                      "title-md": ["Hanken Grotesk"],
+                      "body-sm": ["Hanken Grotesk"],
+                      "headline-lg": ["Anybody"],
+                      "display-lg": ["Anybody"],
+                      "body-base": ["Hanken Grotesk"]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                      "data-mono": ["13px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                      "title-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                      "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex">
+<!-- SideNavBar -->
+<nav class="h-screen w-64 fixed left-0 top-0 bg-surface border-r border-outline-variant flex flex-col h-full py-stack-lg hidden md:flex z-40">
+<div class="px-5 mb-stack-lg flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="A bold, modern logo for a speed skating school featuring dynamic swooshes in bright yellow and sleek typography, set against a deep black background. High contrast, corporate athletic style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVctk56cU_Eywi2z7OuduNzLtgjcg1c6eoyEx9PwjJU6CS038mCDOInJw2bEY8Zb01XKF1GRIpD0zRL52k_AGxYuKolQKzEJvo5fmD2e51LWCAHbTNGQqEjkX5djtNqcA3a1pjW5oaDjBLCRijgpK0wosO4AK9exxqccDBxtcwCuxbqB60ojwQDwfISaN-zOrSDf2fPAuA0u1eDJ8pCk5wYO73wzrf2hmp_FIPJ7MZMvuG-fbBb1g"/>
+<div>
+<h1 class="font-headline-lg text-headline-lg font-bold text-on-surface !text-xl">Elite Skating</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Management Portal</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto flex flex-col gap-2">
+<a class="flex items-center gap-3 text-secondary-fixed font-bold border-l-4 border-secondary-fixed pl-4 py-3 hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined fill" data-icon="dashboard">dashboard</span>
+<span class="font-title-md text-title-md !text-base">Home</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant font-medium pl-5 py-3 hover:bg-surface-container-high hover:text-secondary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-title-md text-title-md !text-base">Athletes</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant font-medium pl-5 py-3 hover:bg-surface-container-high hover:text-secondary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-title-md text-title-md !text-base">Payments</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant font-medium pl-5 py-3 hover:bg-surface-container-high hover:text-secondary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-title-md text-title-md !text-base">Classes</span>
+</a>
+</div>
+<div class="mt-auto flex flex-col gap-2 border-t border-outline-variant pt-4">
+<a class="flex items-center gap-3 text-on-surface-variant font-medium pl-5 py-3 hover:bg-surface-container-high hover:text-secondary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-title-md text-title-md !text-base">Settings</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant font-medium pl-5 py-3 hover:bg-surface-container-high hover:text-secondary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-title-md text-title-md !text-base">Logout</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<header class="docked full-width top-0 sticky z-50 bg-surface-container border-b border-outline-variant shadow-sm flex justify-between items-center h-16 px-gutter">
+<div class="flex items-center md:hidden">
+<span class="material-symbols-outlined text-primary cursor-pointer" data-icon="menu">menu</span>
+</div>
+<div class="hidden md:block">
+<h2 class="font-headline-lg text-headline-lg font-black text-secondary !text-xl">Management Dashboard</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm" data-icon="search">search</span>
+<input class="bg-[#020617] border border-[#1F2937] text-body-sm font-body-sm text-on-surface rounded-full pl-9 pr-4 py-1.5 focus:outline-none focus:border-tertiary-container focus:ring-1 focus:ring-tertiary-container w-48" placeholder="Search..." type="text"/>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors hidden sm:block">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<img class="w-8 h-8 rounded-full border border-outline-variant object-cover ml-2" data-alt="A professional headshot of a young male speed skater in a sleek, dark aerodynamic suit with subtle yellow accents. The lighting is dramatic, highlighting his focused expression against a dark background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1hRcEGt4ybQNiNFBTHoimS-nrm2BdnOkmxCAuAxavmWJOu9ZMAcP5P-un-QK-eV25WjUIH4cw-BSg_4LVhHDGgEYti5YlQ8HXgEEem54Oxukekhe4_miwL6vu3vJpUqXIROXmy3Lf_b2ojgU142KbzBhOfk0KniPSyqXWuaB129rzYHpZpxYIuBFpvF-ipgFYygsSW6DlPWdKRmLrh56WBhFS2hF76DoG7fpEyZrHmnmG-ZT7Pvc"/>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-gutter lg:p-stack-lg flex-1 overflow-y-auto">
+<div class="mb-stack-lg">
+<h1 class="font-display-lg text-display-lg text-on-surface mb-2">Mi Perfil de Deportista</h1>
+<p class="font-body-base text-body-base text-on-surface-variant">Bienvenido de nuevo, preparate para tu próxima sesión.</p>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-stack-md lg:gap-stack-lg">
+<!-- Personal Info Card -->
+<div class="bg-[#111827] border border-[#1F2937] rounded-xl p-stack-md flex flex-col md:col-span-2 relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-tertiary-container/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="flex flex-col sm:flex-row gap-stack-lg items-center sm:items-start relative z-10">
+<img class="w-32 h-32 rounded-full border-4 border-surface-container object-cover shadow-lg" data-alt="A close-up action shot of a speed skater's legs in motion on an indoor track. The skater is wearing high-end black carbon fiber skates with neon yellow laces. The background is blurred for a sense of speed." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_7X1nH7Y8ZmHNqEEzoz_mGubbkxONk5H-ncn6bzjJNrsU7KnDwF0wOs-mpyLt5__lwXHsMJmmjdTAZiNrEizX_83pH4ZqaEMRRVMzi0FUcqjVQq5IYHB1viw98Ahuo21hCFGcSTpNTi4FAyjgOl9F0X17At3nPWXe7juN57j9skwmDiQl_vau53IC6fIjVr47CjcmQhV6VLBrPghxJbVXMADPwTFGEYtQv-rj64GYWc-weSdLgCU"/>
+<div class="flex-1 text-center sm:text-left w-full">
+<div class="flex flex-col sm:flex-row justify-between items-center sm:items-start mb-4 gap-2">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface !text-2xl mb-1">Mateo Rodríguez</h2>
+<p class="font-data-mono text-data-mono text-secondary">ID: 1023456789</p>
+</div>
+<span class="bg-surface-container-high text-on-surface px-3 py-1 rounded-full font-title-md text-title-md !text-sm border border-outline-variant">Cat: Avanzado</span>
+</div>
+<div class="grid grid-cols-2 gap-4 mt-6">
+<div class="bg-[#050A1A] p-3 rounded-lg border border-[#1F2937]">
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-1">Plan Actual</p>
+<p class="font-title-md text-title-md text-on-surface">Alto Rendimiento 4x</p>
+</div>
+<div class="bg-[#050A1A] p-3 rounded-lg border border-[#1F2937]">
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-1">Próxima Competencia</p>
+<p class="font-title-md text-title-md text-on-surface">Nacional Invierno</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Status Panel -->
+<div class="flex flex-col gap-stack-md">
+<div class="bg-[#111827] border border-[#1F2937] rounded-xl p-stack-md flex-1 flex flex-col justify-center items-center text-center">
+<span class="material-symbols-outlined text-4xl text-green-400 mb-2" data-icon="check_circle">check_circle</span>
+<h3 class="font-title-md text-title-md text-on-surface mb-1">Estado de Pago</h3>
+<span class="bg-green-900/50 text-green-400 px-4 py-1.5 rounded-full font-data-mono text-data-mono border border-green-800">AL DÍA</span>
+</div>
+<div class="bg-[#111827] border border-[#1F2937] rounded-xl p-stack-md flex-1 flex flex-col justify-center items-center text-center relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 text-secondary/10">
+<span class="material-symbols-outlined !text-9xl" data-icon="speed">speed</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface-variant mb-2 z-10">Clases Asistidas</h3>
+<div class="flex items-end gap-2 z-10">
+<span class="font-display-lg text-display-lg text-secondary !text-5xl">14</span>
+<span class="font-body-base text-body-base text-on-surface-variant pb-2">/ 16</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2 z-10">Mes Actual (Noviembre)</p>
+</div>
+</div>
+</div>
+<!-- Recent Activity List -->
+<div class="mt-stack-lg">
+<div class="flex justify-between items-end mb-stack-md">
+<h3 class="font-headline-lg text-headline-lg text-on-surface !text-xl">Últimas Sesiones</h3>
+<button class="font-title-md text-title-md text-secondary hover:text-secondary-fixed transition-colors text-sm">Ver Todo</button>
+</div>
+<div class="bg-[#111827] border border-[#1F2937] rounded-xl overflow-hidden">
+<div class="divide-y divide-[#1F2937]">
+<!-- Row 1 -->
+<div class="flex items-center justify-between p-4 hover:bg-[#1a2333] transition-colors group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="timer">timer</span>
+</div>
+<div>
+<p class="font-title-md text-title-md text-on-surface mb-0.5">Entrenamiento de Velocidad</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Pista Sur - Coach Ramirez</p>
+</div>
+</div>
+<div class="text-right">
+<span class="bg-yellow-900/50 text-yellow-500 px-3 py-1 rounded-full font-data-mono text-data-mono !text-xs border border-yellow-800">PRESENTE</span>
+<p class="font-data-mono text-data-mono text-on-surface-variant mt-2 !text-xs">15 Nov, 18:00</p>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="flex items-center justify-between p-4 hover:bg-[#1a2333] transition-colors group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="fitness_center">fitness_center</span>
+</div>
+<div>
+<p class="font-title-md text-title-md text-on-surface mb-0.5">Preparación Física</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Gimnasio Central - Coach Silva</p>
+</div>
+</div>
+<div class="text-right">
+<span class="bg-green-900/50 text-green-400 px-3 py-1 rounded-full font-data-mono text-data-mono !text-xs border border-green-800">PRESENTE</span>
+<p class="font-data-mono text-data-mono text-on-surface-variant mt-2 !text-xs">13 Nov, 17:30</p>
+</div>
+</div>
+<!-- Row 3 -->
+<div class="flex items-center justify-between p-4 hover:bg-[#1a2333] transition-colors group opacity-70">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="timer">timer</span>
+</div>
+<div>
+<p class="font-title-md text-title-md text-on-surface mb-0.5">Técnica y Curvas</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Pista Norte - Coach Ramirez</p>
+</div>
+</div>
+<div class="text-right">
+<span class="bg-slate-800 text-slate-300 px-3 py-1 rounded-full font-data-mono text-data-mono !text-xs border border-slate-600">AUSENTE</span>
+<p class="font-data-mono text-data-mono text-on-surface-variant mt-2 !text-xs">10 Nov, 18:00</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>
