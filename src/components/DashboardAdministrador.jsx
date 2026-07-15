@@ -9,6 +9,7 @@ export default function DashboardAdministrador() {
   const [loading, setLoading] = useState(true);
   
   const [showDeportistaModal, setShowDeportistaModal] = useState(false);
+  const [deportistaEditando, setDeportistaEditando] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
@@ -108,54 +109,64 @@ export default function DashboardAdministrador() {
     }
   };
 
-  const handleCrearDeportista = async (e) => {
+  const abrirModalEdicion = (deportista) => {
+    setDeportistaEditando(deportista);
+    setShowDeportistaModal(true);
+  };
+
+  const handleGuardarDeportista = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     const formData = new FormData(e.target);
-    const nuevoDeportista = {
+    const datosDeportista = {
       nombre: formData.get('nombre'),
       documento: formData.get('documento'),
       edad: parseInt(formData.get('edad')),
       categoria: formData.get('categoria'),
       telefono: formData.get('telefono'),
       correo: formData.get('correo'),
-      estado: 'activo',
       plan_id_plan: parseInt(formData.get('plan_id'))
     };
 
     try {
-      // Necesitamos el select() para obtener el ID generado del nuevo deportista
-      const { data: insertData, error } = await supabase.from('deportista').insert([nuevoDeportista]).select();
-      if (error) throw error;
-      
-      const idNuevoDeportista = insertData[0].id_deportista;
+      if (deportistaEditando) {
+        const { error } = await supabase.from('deportista')
+          .update(datosDeportista)
+          .eq('id_deportista', deportistaEditando.id_deportista);
+        if (error) throw error;
+        alert("¡Deportista actualizado exitosamente!");
+      } else {
+        datosDeportista.estado = 'activo';
+        const { data: insertData, error } = await supabase.from('deportista').insert([datosDeportista]).select();
+        if (error) throw error;
+        
+        const idNuevoDeportista = insertData[0].id_deportista;
 
-      // Matricular automáticamente según la categoría al entrenador correspondiente
-      let idEntrenador = null;
-      if (nuevoDeportista.categoria === 'Iniciación') idEntrenador = 1;
-      else if (nuevoDeportista.categoria === 'Intermedio') idEntrenador = 2;
-      else if (nuevoDeportista.categoria === 'Avanzado') idEntrenador = 3;
-      else if (nuevoDeportista.categoria === 'Papás') idEntrenador = 4;
+        let idEntrenador = null;
+        if (datosDeportista.categoria === 'Iniciación') idEntrenador = 1;
+        else if (datosDeportista.categoria === 'Intermedio') idEntrenador = 2;
+        else if (datosDeportista.categoria === 'Avanzado') idEntrenador = 3;
+        else if (datosDeportista.categoria === 'Papás') idEntrenador = 4;
 
-      if (idEntrenador) {
-        // Buscamos las clases programadas para este entrenador
-        const { data: clases } = await supabase.from('clase').select('id_clase').eq('id_entrenador', idEntrenador);
-        if (clases && clases.length > 0) {
-          const asistencias = clases.map(c => ({
-            estado_asistencia: 'Pendiente',
-            deportista_id_deportista: idNuevoDeportista,
-            clase_id_clase: c.id_clase
-          }));
-          // Insertamos la asistencia (matrícula)
-          await supabase.from('asistencia').insert(asistencias);
+        if (idEntrenador) {
+          const { data: clases } = await supabase.from('clase').select('id_clase').eq('id_entrenador', idEntrenador);
+          if (clases && clases.length > 0) {
+            const asistencias = clases.map(c => ({
+              estado_asistencia: 'Pendiente',
+              deportista_id_deportista: idNuevoDeportista,
+              clase_id_clase: c.id_clase
+            }));
+            await supabase.from('asistencia').insert(asistencias);
+          }
         }
+        alert("¡Deportista creado y matriculado exitosamente!");
       }
       
-      alert("¡Deportista creado y matriculado exitosamente!");
       setShowDeportistaModal(false);
-      fetchDatos(); // Recargar la tabla
+      setDeportistaEditando(null);
+      fetchDatos(); 
     } catch (error) {
-      alert("Error al crear deportista: " + error.message);
+      alert("Error al guardar deportista: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -170,7 +181,10 @@ export default function DashboardAdministrador() {
         </div>
         <div className="flex gap-3">
           <button 
-            onClick={() => setShowDeportistaModal(true)}
+            onClick={() => {
+              setDeportistaEditando(null);
+              setShowDeportistaModal(true);
+            }}
             className="flex items-center gap-2 bg-primary/20 hover:bg-primary/40 text-primary px-4 py-2 rounded-xl transition-all border border-primary/30 font-medium"
           >
             <UserPlus size={18} />
@@ -270,7 +284,14 @@ export default function DashboardAdministrador() {
                       </button>
                     </td>
                     <td className="px-6 py-4">{row.fecha_pago || 'No registra'}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 flex gap-2">
+                      <button 
+                        onClick={() => abrirModalEdicion(row)}
+                        className="text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 p-2 rounded-lg transition-colors"
+                        title="Editar Deportista"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                      </button>
                       <button 
                         onClick={() => eliminarDeportista(row.id_deportista)}
                         className="text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 p-2 rounded-lg transition-colors"
@@ -297,25 +318,25 @@ export default function DashboardAdministrador() {
       {showDeportistaModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-cardBg border border-slate-700 p-6 rounded-2xl w-full max-w-md relative">
-            <button onClick={() => setShowDeportistaModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+            <button onClick={() => { setShowDeportistaModal(false); setDeportistaEditando(null); }} className="absolute top-4 right-4 text-slate-400 hover:text-white">
               <X size={20} />
             </button>
-            <h2 className="text-xl font-bold mb-4 text-primary">Registrar Deportista</h2>
-            <form onSubmit={handleCrearDeportista} className="space-y-4">
+            <h2 className="text-xl font-bold mb-4 text-primary">{deportistaEditando ? 'Editar Deportista' : 'Registrar Deportista'}</h2>
+            <form onSubmit={handleGuardarDeportista} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs text-textMuted mb-1">Nombre Completo</label>
-                  <input required name="nombre" type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                  <input required name="nombre" defaultValue={deportistaEditando?.nombre_deportista} type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
                 </div>
                 <div>
                   <label className="block text-xs text-textMuted mb-1">Documento</label>
-                  <input required name="documento" type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                  <input required name="documento" defaultValue={deportistaEditando?.documento} type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs text-textMuted mb-1">Edad</label>
-                  <input required name="edad" type="number" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                  <input required name="edad" defaultValue={10} type="number" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-textMuted">Categoría</label>
@@ -331,15 +352,15 @@ export default function DashboardAdministrador() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs text-textMuted mb-1">Teléfono</label>
-                  <input name="telefono" type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                  <input name="telefono" defaultValue={deportistaEditando?.telefono} type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
                 </div>
                 <div>
-                  <label className="block text-xs text-textMuted mb-1">Correo Electrónico</label>
-                  <input required name="correo" type="email" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                  <label className="block text-xs text-textMuted mb-1">Correo Electrónico (para inicio sesión)</label>
+                  <input required name="correo" defaultValue={deportistaEditando?.documento ? '' : ''} placeholder="ejemplo@correo.com" type="email" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
                 </div>
               </div>
               <div>
-                <label className="block text-xs text-textMuted mb-1">Plan Inicial</label>
+                <label className="block text-xs text-textMuted mb-1">Plan Mensual</label>
                 <select required name="plan_id" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary">
                   <option value="">Selecciona un plan...</option>
                   {planes.map(p => (
@@ -348,7 +369,7 @@ export default function DashboardAdministrador() {
                 </select>
               </div>
               <button disabled={isSubmitting} type="submit" className="w-full bg-primary hover:bg-emerald-400 text-slate-900 font-bold py-2 rounded-xl transition-colors mt-2">
-                {isSubmitting ? 'Guardando...' : 'Guardar Deportista'}
+                {isSubmitting ? 'Guardando...' : (deportistaEditando ? 'Actualizar Deportista' : 'Guardar Deportista')}
               </button>
             </form>
           </div>
