@@ -29,20 +29,29 @@ export default function Login() {
 
       if (userEmail === 'admin@capitalsk.com') {
         navigate('/admin');
-      } else if (userEmail === 'entrenador@capitalsk.com') {
-        navigate('/entrenador');
       } else {
-        // Verificar si es un deportista
-        const { data: deportista, error: dbError } = await supabase
-          .from('deportista')
-          .select('id_deportista')
+        // Verificar si es un entrenador
+        const { data: entrenador, error: entError } = await supabase
+          .from('entrenador')
+          .select('id_entrenador')
           .eq('correo', userEmail)
-          .single();
+          .maybeSingle();
 
-        if (dbError || !deportista) {
-          throw new Error('No se encontró el usuario en la base de datos de deportistas. Contacte al administrador.');
+        if (entrenador) {
+          navigate('/entrenador');
         } else {
-          navigate('/deportista');
+          // Verificar si es un deportista
+          const { data: deportista, error: dbError } = await supabase
+            .from('deportista')
+            .select('id_deportista')
+            .eq('correo', userEmail)
+            .maybeSingle();
+
+          if (!deportista) {
+            throw new Error('No se encontró el usuario en la base de datos de deportistas ni entrenadores. Contacte al administrador.');
+          } else {
+            navigate('/deportista');
+          }
         }
       }
     } catch (error) {
