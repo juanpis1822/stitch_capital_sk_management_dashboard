@@ -27,7 +27,11 @@ export default function DashboardAdministrador() {
         .select('*');
       
       if (error) throw error;
-      setDatos(data || []);
+      const datosSaneados = (data || []).map(d => ({
+        ...d,
+        estado_pago: d.estado_pago === 'Mora' ? 'Pendiente' : d.estado_pago
+      }));
+      setDatos(datosSaneados);
     } catch (error) {
       console.error('Error fetching data:', error.message);
     } finally {
