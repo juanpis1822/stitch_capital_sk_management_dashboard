@@ -170,13 +170,14 @@ export default function DashboardAdministrador() {
         
         const idNuevoDeportista = insertData[0].id_deportista;
 
-        // Auto-crear una mensualidad pendiente para el nuevo deportista
+        // Auto-crear una mensualidad Pagada para el nuevo deportista
         const { data: planData } = await supabase.from('plan').select('valor_mensual').eq('id_plan', datosDeportista.plan_id_plan).single();
         if (planData) {
           await supabase.from('mensualidad').insert([{
              mes: new Date().getMonth() + 1,
              valor: planData.valor_mensual,
-             estado_pago: 'Pendiente',
+             estado_pago: 'Pagado',
+             fecha_pago: new Date().toISOString().split('T')[0],
              deportista_id_deportista: idNuevoDeportista
           }]);
         }
