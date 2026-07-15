@@ -51,14 +51,19 @@ export default function DashboardDeportista() {
       // 3. Buscar el total de clases del plan para saber cuántas le quedan
       if (perfilData.nombre_plan !== 'N/A') {
         const { data: planData } = await supabase
-          .from('PLAN')
+          .from('plan')
           .select('numero_clases_incluidas')
           .eq('nombre_plan', perfilData.nombre_plan)
           .single();
         
         if (planData) {
-          perfilData.clases_incluidas = planData.numero_clases_incluidas;
-          perfilData.clases_restantes = planData.numero_clases_incluidas - perfilData.total_clases_asistidas;
+          if (perfilData.nombre_plan.toLowerCase().includes('sin límite') || !planData.numero_clases_incluidas) {
+            perfilData.clases_incluidas = '∞';
+            perfilData.clases_restantes = 'Ilimitadas';
+          } else {
+            perfilData.clases_incluidas = planData.numero_clases_incluidas;
+            perfilData.clases_restantes = planData.numero_clases_incluidas - perfilData.total_clases_asistidas;
+          }
         }
       }
       
