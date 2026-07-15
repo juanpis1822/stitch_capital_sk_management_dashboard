@@ -73,6 +73,28 @@ export default function DashboardAdministrador() {
     }
   };
 
+  const toggleEstado = async (idDeportista, estadoActual) => {
+    if (!idDeportista) {
+      alert("Para poder editar el estado, asegúrate de correr el script 'supabase_final.sql' en Supabase.");
+      return;
+    }
+    const nuevoEstado = estadoActual?.toLowerCase() === 'activo' ? 'inactivo' : 'activo';
+    
+    // UI Update
+    setDatos(datos.map(d => d.id_deportista === idDeportista ? { ...d, estado_deportista: nuevoEstado } : d));
+
+    // DB Update
+    const { error } = await supabase
+      .from('deportista')
+      .update({ estado: nuevoEstado })
+      .eq('id_deportista', idDeportista);
+
+    if (error) {
+      alert("Error al actualizar estado: " + error.message);
+      setDatos(datos.map(d => d.id_deportista === idDeportista ? { ...d, estado_deportista: estadoActual } : d));
+    }
+  };
+
   const handleCrearDeportista = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -223,9 +245,12 @@ export default function DashboardAdministrador() {
                     <td className="px-6 py-4">{row.documento}</td>
                     <td className="px-6 py-4 font-medium text-slate-200">{row.nombre_deportista}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs ${row.estado_deportista === 'Activo' || row.estado_deportista === 'activo' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'}`}>
+                      <button 
+                        onClick={() => toggleEstado(row.id_deportista, row.estado_deportista)}
+                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${row.estado_deportista === 'Activo' || row.estado_deportista === 'activo' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/30' : 'bg-slate-500/10 text-slate-400 border-slate-500/20 hover:bg-slate-500/30'}`}
+                      >
                         {row.estado_deportista || 'activo'}
-                      </span>
+                      </button>
                     </td>
                     <td className="px-6 py-4">{row.telefono}</td>
                     <td className="px-6 py-4">{row.nombre_plan}</td>
