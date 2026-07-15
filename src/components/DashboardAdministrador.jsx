@@ -8,9 +8,7 @@ export default function DashboardAdministrador() {
   const [planes, setPlanes] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Estados para modales
   const [showDeportistaModal, setShowDeportistaModal] = useState(false);
-  const [showEntrenadorModal, setShowEntrenadorModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
@@ -163,30 +161,6 @@ export default function DashboardAdministrador() {
     }
   };
 
-  const handleCrearEntrenador = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    const formData = new FormData(e.target);
-    const nuevoEntrenador = {
-      nombre: formData.get('nombre'),
-      documento: formData.get('documento'),
-      correo: formData.get('correo'),
-      telefono: formData.get('telefono')
-    };
-
-    try {
-      const { error } = await supabase.from('entrenador').insert([nuevoEntrenador]);
-      if (error) throw error;
-      
-      alert("¡Entrenador creado exitosamente!");
-      setShowEntrenadorModal(false);
-    } catch (error) {
-      alert("Error al crear entrenador: " + error.message + "\n\n¿Ya creaste la tabla ENTRENADOR en Supabase?");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background text-textMain p-6 relative">
       <header className="flex justify-between items-center mb-8 bg-cardBg p-4 rounded-2xl shadow-sm border border-slate-700/50">
@@ -195,13 +169,6 @@ export default function DashboardAdministrador() {
           <p className="text-textMuted text-sm">Visión general del club Capital SK</p>
         </div>
         <div className="flex gap-3">
-          <button 
-            onClick={() => setShowEntrenadorModal(true)}
-            className="flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 px-4 py-2 rounded-xl transition-all border border-blue-500/30 font-medium"
-          >
-            <UserPlus size={18} />
-            <span className="hidden md:inline">Crear Entrenador</span>
-          </button>
           <button 
             onClick={() => setShowDeportistaModal(true)}
             className="flex items-center gap-2 bg-primary/20 hover:bg-primary/40 text-primary px-4 py-2 rounded-xl transition-all border border-primary/30 font-medium"
@@ -382,39 +349,6 @@ export default function DashboardAdministrador() {
               </div>
               <button disabled={isSubmitting} type="submit" className="w-full bg-primary hover:bg-emerald-400 text-slate-900 font-bold py-2 rounded-xl transition-colors mt-2">
                 {isSubmitting ? 'Guardando...' : 'Guardar Deportista'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL ENTRENADOR */}
-      {showEntrenadorModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-cardBg border border-slate-700 p-6 rounded-2xl w-full max-w-md relative">
-            <button onClick={() => setShowEntrenadorModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
-              <X size={20} />
-            </button>
-            <h2 className="text-xl font-bold mb-4 text-blue-400">Registrar Entrenador</h2>
-            <form onSubmit={handleCrearEntrenador} className="space-y-4">
-              <div>
-                <label className="block text-xs text-textMuted mb-1">Nombre Completo</label>
-                <input required name="nombre" type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-              </div>
-              <div>
-                <label className="block text-xs text-textMuted mb-1">Documento</label>
-                <input required name="documento" type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-              </div>
-              <div>
-                <label className="block text-xs text-textMuted mb-1">Correo Electrónico</label>
-                <input required name="correo" type="email" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-              </div>
-              <div>
-                <label className="block text-xs text-textMuted mb-1">Teléfono</label>
-                <input name="telefono" type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-              </div>
-              <button disabled={isSubmitting} type="submit" className="w-full bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 rounded-xl transition-colors mt-2">
-                {isSubmitting ? 'Guardando...' : 'Guardar Entrenador'}
               </button>
             </form>
           </div>
