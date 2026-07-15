@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, DollarSign, Activity, UserPlus, X } from 'lucide-react';
+import { LogOut, Users, DollarSign, Activity, UserPlus, X, Calendar } from 'lucide-react';
 
 export default function DashboardAdministrador() {
   const [datos, setDatos] = useState([]);
@@ -9,6 +9,7 @@ export default function DashboardAdministrador() {
   const [loading, setLoading] = useState(true);
   
   const [showDeportistaModal, setShowDeportistaModal] = useState(false);
+  const [showClaseModal, setShowClaseModal] = useState(false);
   const [deportistaEditando, setDeportistaEditando] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -179,6 +180,53 @@ export default function DashboardAdministrador() {
     }
   };
 
+  const handleProgramarClase = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(e.target);
+    
+    const categoria = formData.get('categoria');
+    let idEntrenador = null;
+    if (categoria === 'Iniciación') idEntrenador = 1;
+    else if (categoria === 'Intermedio') idEntrenador = 2;
+    else if (categoria === 'Avanzado') idEntrenador = 3;
+    else if (categoria === 'Papás') idEntrenador = 4;
+
+    const nuevaClase = {
+      fecha: formData.get('fecha'),
+      hora: formData.get('hora'),
+      descripcion: formData.get('descripcion'),
+      id_entrenador: idEntrenador
+    };
+
+    try {
+      // 1. Crear la clase
+      const { data: insertClase, error: errClase } = await supabase.from('clase').insert([nuevaClase]).select();
+      if (errClase) throw errClase;
+      const idNuevaClase = insertClase[0].id_clase;
+
+      // 2. Buscar deportistas de esa categoría
+      const { data: deportistas } = await supabase.from('deportista').select('id_deportista').eq('categoria', categoria).eq('estado', 'activo');
+      
+      // 3. Matricularlos automáticamente
+      if (deportistas && deportistas.length > 0) {
+        const asistencias = deportistas.map(d => ({
+          estado_asistencia: 'Pendiente',
+          deportista_id_deportista: d.id_deportista,
+          clase_id_clase: idNuevaClase
+        }));
+        await supabase.from('asistencia').insert(asistencias);
+      }
+
+      alert(`¡Clase programada exitosamente y ${deportistas ? deportistas.length : 0} alumnos matriculados!`);
+      setShowClaseModal(false);
+    } catch (error) {
+      alert("Error al programar clase: " + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-textMain p-6 relative">
       <header className="flex justify-between items-center mb-8 bg-cardBg p-4 rounded-2xl shadow-sm border border-slate-700/50">
@@ -187,6 +235,13 @@ export default function DashboardAdministrador() {
           <p className="text-textMuted text-sm">Visión general del club Capital SK</p>
         </div>
         <div className="flex gap-3">
+          <button 
+            onClick={() => setShowClaseModal(true)}
+            className="flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 px-4 py-2 rounded-xl transition-all border border-purple-500/30 font-medium"
+          >
+            <Calendar size={18} />
+            <span className="hidden md:inline">Programar Clase</span>
+          </button>
           <button 
             onClick={() => {
               setDeportistaEditando(null);
@@ -377,6 +432,47 @@ export default function DashboardAdministrador() {
               </div>
               <button disabled={isSubmitting} type="submit" className="w-full bg-primary hover:bg-emerald-400 text-slate-900 font-bold py-2 rounded-xl transition-colors mt-2">
                 {isSubmitting ? 'Guardando...' : (deportistaEditando ? 'Actualizar Deportista' : 'Guardar Deportista')}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CLASE */}
+      {showClaseModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-cardBg border border-slate-700 p-6 rounded-2xl w-full max-w-md relative">
+            <button onClick={() => setShowClaseModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+              <X size={20} />
+            </button>
+            <h2 className="text-xl font-bold mb-4 text-purple-400">Programar Nueva Clase</h2>
+            <form onSubmit={handleProgramarClase} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-textMuted mb-1">Fecha</label>
+                  <input required name="fecha" type="date" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+                </div>
+                <div>
+                  <label className="block text-xs text-textMuted mb-1">Hora</label>
+                  <input required name="hora" type="time" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-textMuted mb-1">Descripción / Tema</label>
+                <input required name="descripcion" placeholder="Ej: Práctica de frenado" type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-textMuted">Categoría (Nivel)</label>
+                <select name="categoria" required className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none text-textMain appearance-none">
+                  <option value="">Selecciona una categoría</option>
+                  <option value="Iniciación">Iniciación</option>
+                  <option value="Intermedio">Intermedio</option>
+                  <option value="Avanzado">Avanzado</option>
+                  <option value="Papás">Papás (Adultos)</option>
+                </select>
+              </div>
+              <button disabled={isSubmitting} type="submit" className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 rounded-xl transition-colors mt-2">
+                {isSubmitting ? 'Guardando...' : 'Programar y Asignar Alumnos'}
               </button>
             </form>
           </div>
