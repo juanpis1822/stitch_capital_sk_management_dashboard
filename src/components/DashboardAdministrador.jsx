@@ -126,13 +126,34 @@ export default function DashboardAdministrador() {
     };
 
     try {
-      // Necesitamos generar un id_deportista porque la tabla no tiene SERIAL por defecto en el SQL del usuario,
-      // pero si lo tiene, esto puede fallar. Asumiremos que el usuario usa SERIAL o autoincrement.
-      // Si falla, el usuario debe ajustar su SQL para que id_deportista sea autoincremental.
-      const { error } = await supabase.from('deportista').insert([nuevoDeportista]);
+      // Necesitamos el select() para obtener el ID generado del nuevo deportista
+      const { data: insertData, error } = await supabase.from('deportista').insert([nuevoDeportista]).select();
       if (error) throw error;
       
-      alert("¡Deportista creado exitosamente!");
+      const idNuevoDeportista = insertData[0].id_deportista;
+
+      // Matricular automáticamente según la categoría al entrenador correspondiente
+      let idEntrenador = null;
+      if (nuevoDeportista.categoria === 'Iniciación') idEntrenador = 1;
+      else if (nuevoDeportista.categoria === 'Intermedio') idEntrenador = 2;
+      else if (nuevoDeportista.categoria === 'Avanzado') idEntrenador = 3;
+      else if (nuevoDeportista.categoria === 'Papás') idEntrenador = 4;
+
+      if (idEntrenador) {
+        // Buscamos las clases programadas para este entrenador
+        const { data: clases } = await supabase.from('clase').select('id_clase').eq('id_entrenador', idEntrenador);
+        if (clases && clases.length > 0) {
+          const asistencias = clases.map(c => ({
+            estado_asistencia: 'Pendiente',
+            deportista_id_deportista: idNuevoDeportista,
+            clase_id_clase: c.id_clase
+          }));
+          // Insertamos la asistencia (matrícula)
+          await supabase.from('asistencia').insert(asistencias);
+        }
+      }
+      
+      alert("¡Deportista creado y matriculado exitosamente!");
       setShowDeportistaModal(false);
       fetchDatos(); // Recargar la tabla
     } catch (error) {
