@@ -45,7 +45,7 @@ export default function DashboardEntrenador() {
 
     // Actualización real en la base de datos
     const { error } = await supabase
-      .from('ASISTENCIA')
+      .from('asistencia')
       .update({ estado_asistencia: nuevoEstado })
       .eq('id_asistencia', idAsistencia);
 
