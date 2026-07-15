@@ -51,25 +51,45 @@ export default function DashboardAdministrador() {
     navigate('/');
   };
 
-  const togglePago = async (idMensualidad, estadoActual) => {
-    if (!idMensualidad) {
-      alert("Para poder editar pagos, asegúrate de correr el script 'actualizacion.sql' en Supabase.");
+  const togglePago = async (row) => {
+    if (!row.id_mensualidad) {
+      // Si no tiene mensualidad, la creamos automáticamente al darle clic
+      const { data, error } = await supabase.from('mensualidad').insert([{
+        mes: new Date().getMonth() + 1,
+        valor: row.valor_plan_oficial || 0,
+        estado_pago: 'Pagado',
+        fecha_pago: new Date().toISOString().split('T')[0],
+        deportista_id_deportista: row.id_deportista
+      }]).select();
+      
+      if (error) {
+        alert("Error al crear mensualidad: " + error.message);
+      } else if (data) {
+        setDatos(datos.map(d => d.id_deportista === row.id_deportista ? { 
+          ...d, 
+          id_mensualidad: data[0].id_mensualidad, 
+          estado_pago: 'Pagado',
+          valor_cobrado: data[0].valor,
+          fecha_pago: data[0].fecha_pago
+        } : d));
+      }
       return;
     }
-    const nuevoEstado = estadoActual === 'Pagado' ? 'Pendiente' : 'Pagado';
+
+    const nuevoEstado = row.estado_pago === 'Pagado' ? 'Pendiente' : 'Pagado';
     
     // UI Update
-    setDatos(datos.map(d => d.id_mensualidad === idMensualidad ? { ...d, estado_pago: nuevoEstado } : d));
+    setDatos(datos.map(d => d.id_mensualidad === row.id_mensualidad ? { ...d, estado_pago: nuevoEstado } : d));
 
     // DB Update
     const { error } = await supabase
       .from('mensualidad')
       .update({ estado_pago: nuevoEstado })
-      .eq('id_mensualidad', idMensualidad);
+      .eq('id_mensualidad', row.id_mensualidad);
 
     if (error) {
       alert("Error al actualizar pago: " + error.message);
-      setDatos(datos.map(d => d.id_mensualidad === idMensualidad ? { ...d, estado_pago: estadoActual } : d));
+      setDatos(datos.map(d => d.id_mensualidad === row.id_mensualidad ? { ...d, estado_pago: row.estado_pago } : d));
     }
   };
 
@@ -149,6 +169,17 @@ export default function DashboardAdministrador() {
         if (error) throw error;
         
         const idNuevoDeportista = insertData[0].id_deportista;
+
+        // Auto-crear una mensualidad pendiente para el nuevo deportista
+        const { data: planData } = await supabase.from('plan').select('valor_mensual').eq('id_plan', datosDeportista.plan_id_plan).single();
+        if (planData) {
+          await supabase.from('mensualidad').insert([{
+             mes: new Date().getMonth() + 1,
+             valor: planData.valor_mensual,
+             estado_pago: 'Pendiente',
+             deportista_id_deportista: idNuevoDeportista
+          }]);
+        }
 
         let idEntrenador = null;
         if (datosDeportista.categoria === 'Iniciación') idEntrenador = 1;
@@ -339,10 +370,10 @@ export default function DashboardAdministrador() {
                     <td className="px-6 py-4">${row.valor_cobrado}</td>
                     <td className="px-6 py-4">
                       <button 
-                        onClick={() => togglePago(row.id_mensualidad, row.estado_pago)}
-                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${row.estado_pago === 'Pagado' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/30' : row.estado_pago === 'Pendiente' ? 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/30' : 'bg-slate-500/10 text-slate-400 border-slate-500/20 hover:bg-slate-500/30'}`}
+                        onClick={() => togglePago(row)}
+                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${(row.estado_pago || 'Pendiente') === 'Pagado' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/30' : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/30'}`}
                       >
-                        {row.estado_pago || 'Mora'}
+                        {row.estado_pago || 'Pendiente'}
                       </button>
                     </td>
                     <td className="px-6 py-4">{row.fecha_pago || 'No registra'}</td>
