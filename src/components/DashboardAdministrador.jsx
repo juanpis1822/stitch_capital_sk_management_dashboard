@@ -95,6 +95,21 @@ export default function DashboardAdministrador() {
     }
   };
 
+  const eliminarDeportista = async (idDeportista) => {
+    if (window.confirm("¿Estás seguro de que quieres eliminar a este deportista? Esta acción no se puede deshacer y borrará también sus pagos y asistencias.")) {
+      const { error } = await supabase
+        .from('deportista')
+        .delete()
+        .eq('id_deportista', idDeportista);
+        
+      if (error) {
+        alert("Error al eliminar deportista: " + error.message);
+      } else {
+        setDatos(datos.filter(d => d.id_deportista !== idDeportista));
+      }
+    }
+  };
+
   const handleCrearDeportista = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -237,6 +252,7 @@ export default function DashboardAdministrador() {
                   <th className="px-6 py-4">Valor Cobrado</th>
                   <th className="px-6 py-4">Estado Pago</th>
                   <th className="px-6 py-4">Fecha Pago</th>
+                  <th className="px-6 py-4">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-700/50">
@@ -260,12 +276,21 @@ export default function DashboardAdministrador() {
                     <td className="px-6 py-4">
                       <button 
                         onClick={() => togglePago(row.id_mensualidad, row.estado_pago)}
-                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${row.estado_pago === 'Pagado' || row.estado_pago === 'pagado' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/30' : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/30'}`}
+                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${row.estado_pago === 'Pagado' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/30' : row.estado_pago === 'Pendiente' ? 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/30' : 'bg-slate-500/10 text-slate-400 border-slate-500/20 hover:bg-slate-500/30'}`}
                       >
-                        {row.estado_pago || 'Pendiente'}
+                        {row.estado_pago || 'Mora'}
                       </button>
                     </td>
-                    <td className="px-6 py-4">{row.fecha_pago}</td>
+                    <td className="px-6 py-4">{row.fecha_pago || 'No registra'}</td>
+                    <td className="px-6 py-4">
+                      <button 
+                        onClick={() => eliminarDeportista(row.id_deportista)}
+                        className="text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 p-2 rounded-lg transition-colors"
+                        title="Eliminar Deportista"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                      </button>
+                    </td>
                   </tr>
                 )) : (
                   <tr>
@@ -304,9 +329,15 @@ export default function DashboardAdministrador() {
                   <label className="block text-xs text-textMuted mb-1">Edad</label>
                   <input required name="edad" type="number" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
                 </div>
-                <div>
-                  <label className="block text-xs text-textMuted mb-1">Categoría</label>
-                  <input required name="categoria" type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-textMuted">Categoría</label>
+                  <select name="categoria" required className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-xl focus:ring-2 focus:ring-primary outline-none text-textMain appearance-none">
+                    <option value="">Selecciona una categoría</option>
+                    <option value="Iniciación">Iniciación</option>
+                    <option value="Intermedio">Intermedio</option>
+                    <option value="Avanzado">Avanzado</option>
+                    <option value="Papás">Papás (Adultos)</option>
+                  </select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
