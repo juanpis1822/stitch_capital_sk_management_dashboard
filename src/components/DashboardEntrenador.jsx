@@ -14,9 +14,24 @@ export default function DashboardEntrenador() {
 
   const fetchClases = async () => {
     try {
+      // 1. Saber quién está logueado
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      // 2. Buscar su ID en la tabla entrenador
+      const { data: entrenadorData } = await supabase
+        .from('entrenador')
+        .select('id_entrenador')
+        .eq('correo', user.email)
+        .single();
+        
+      if (!entrenadorData) return;
+
+      // 3. Traer solo las clases de ESTE entrenador
       const { data, error } = await supabase
         .from('Vista_Entrenador')
-        .select('*');
+        .select('*')
+        .eq('id_entrenador', entrenadorData.id_entrenador);
       
       if (error) throw error;
       setClases(data || []);
