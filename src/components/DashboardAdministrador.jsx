@@ -96,6 +96,13 @@ export default function DashboardAdministrador() {
 
   const eliminarDeportista = async (idDeportista) => {
     if (window.confirm("¿Estás seguro de que quieres eliminar a este deportista? Esta acción no se puede deshacer y borrará también sus pagos y asistencias.")) {
+      // 1. Borrado manual en cascada de asistencias
+      await supabase.from('asistencia').delete().eq('deportista_id_deportista', idDeportista);
+      
+      // 2. Borrado manual en cascada de mensualidades
+      await supabase.from('mensualidad').delete().eq('deportista_id_deportista', idDeportista);
+
+      // 3. Finalmente borrar al deportista
       const { error } = await supabase
         .from('deportista')
         .delete()
