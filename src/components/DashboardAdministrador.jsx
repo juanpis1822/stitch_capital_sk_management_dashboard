@@ -37,7 +37,7 @@ export default function DashboardAdministrador() {
 
   const fetchPlanes = async () => {
     try {
-      const { data, error } = await supabase.from('PLAN').select('*');
+      const { data, error } = await supabase.from('plan').select('*');
       if (!error && data) {
         setPlanes(data);
       }
@@ -49,6 +49,28 @@ export default function DashboardAdministrador() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/');
+  };
+
+  const togglePago = async (idMensualidad, estadoActual) => {
+    if (!idMensualidad) {
+      alert("Para poder editar pagos, asegúrate de correr el script 'actualizacion.sql' en Supabase.");
+      return;
+    }
+    const nuevoEstado = estadoActual === 'Pagado' ? 'Pendiente' : 'Pagado';
+    
+    // UI Update
+    setDatos(datos.map(d => d.id_mensualidad === idMensualidad ? { ...d, estado_pago: nuevoEstado } : d));
+
+    // DB Update
+    const { error } = await supabase
+      .from('mensualidad')
+      .update({ estado_pago: nuevoEstado })
+      .eq('id_mensualidad', idMensualidad);
+
+    if (error) {
+      alert("Error al actualizar pago: " + error.message);
+      setDatos(datos.map(d => d.id_mensualidad === idMensualidad ? { ...d, estado_pago: estadoActual } : d));
+    }
   };
 
   const handleCrearDeportista = async (e) => {
@@ -63,14 +85,14 @@ export default function DashboardAdministrador() {
       telefono: formData.get('telefono'),
       correo: formData.get('correo'),
       estado: 'activo',
-      PLAN_id_plan: parseInt(formData.get('plan_id'))
+      plan_id_plan: parseInt(formData.get('plan_id'))
     };
 
     try {
       // Necesitamos generar un id_deportista porque la tabla no tiene SERIAL por defecto en el SQL del usuario,
       // pero si lo tiene, esto puede fallar. Asumiremos que el usuario usa SERIAL o autoincrement.
       // Si falla, el usuario debe ajustar su SQL para que id_deportista sea autoincremental.
-      const { error } = await supabase.from('DEPORTISTA').insert([nuevoDeportista]);
+      const { error } = await supabase.from('deportista').insert([nuevoDeportista]);
       if (error) throw error;
       
       alert("¡Deportista creado exitosamente!");
@@ -95,7 +117,7 @@ export default function DashboardAdministrador() {
     };
 
     try {
-      const { error } = await supabase.from('ENTRENADOR').insert([nuevoEntrenador]);
+      const { error } = await supabase.from('entrenador').insert([nuevoEntrenador]);
       if (error) throw error;
       
       alert("¡Entrenador creado exitosamente!");
@@ -154,8 +176,10 @@ export default function DashboardAdministrador() {
             <DollarSign size={24} />
           </div>
           <div>
-            <p className="text-textMuted text-sm">Ingresos Estimados</p>
-            <p className="text-2xl font-bold">Resumen</p>
+            <p className="text-textMuted text-sm">Ingresos Estimados (Pagados)</p>
+            <p className="text-2xl font-bold">
+              ${datos.filter(d => d.estado_pago === 'Pagado').reduce((acc, curr) => acc + Number(curr.valor_cobrado || 0), 0).toLocaleString()}
+            </p>
           </div>
         </div>
         <div className="bg-cardBg p-6 rounded-2xl border border-slate-700/50 shadow-sm flex items-center gap-4">
@@ -163,8 +187,8 @@ export default function DashboardAdministrador() {
             <Activity size={24} />
           </div>
           <div>
-            <p className="text-textMuted text-sm">Estado General</p>
-            <p className="text-2xl font-bold">Activo</p>
+            <p className="text-textMuted text-sm">Deportistas en Plataforma</p>
+            <p className="text-2xl font-bold">{datos.length}</p>
           </div>
         </div>
       </div>
@@ -200,7 +224,7 @@ export default function DashboardAdministrador() {
                     <td className="px-6 py-4 font-medium text-slate-200">{row.nombre_deportista}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs ${row.estado_deportista === 'Activo' || row.estado_deportista === 'activo' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'}`}>
-                        {row.estado_deportista}
+                        {row.estado_deportista || 'activo'}
                       </span>
                     </td>
                     <td className="px-6 py-4">{row.telefono}</td>
@@ -209,9 +233,12 @@ export default function DashboardAdministrador() {
                     <td className="px-6 py-4">{row.mes}</td>
                     <td className="px-6 py-4">${row.valor_cobrado}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs ${row.estado_pago === 'Pagado' || row.estado_pago === 'pagado' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                        {row.estado_pago}
-                      </span>
+                      <button 
+                        onClick={() => togglePago(row.id_mensualidad, row.estado_pago)}
+                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${row.estado_pago === 'Pagado' || row.estado_pago === 'pagado' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/30' : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/30'}`}
+                      >
+                        {row.estado_pago || 'Pendiente'}
+                      </button>
                     </td>
                     <td className="px-6 py-4">{row.fecha_pago}</td>
                   </tr>

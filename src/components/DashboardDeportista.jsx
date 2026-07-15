@@ -22,7 +22,7 @@ export default function DashboardDeportista() {
 
       // 1. Buscar el id del deportista basado en su correo
       const { data: deportistaData, error: deptError } = await supabase
-        .from('DEPORTISTA')
+        .from('deportista')
         .select('id_deportista')
         .eq('correo', userEmail)
         .single();

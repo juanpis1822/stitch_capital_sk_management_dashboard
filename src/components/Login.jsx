@@ -34,7 +34,7 @@ export default function Login() {
       } else {
         // Verificar si es un deportista
         const { data: deportista, error: dbError } = await supabase
-          .from('DEPORTISTA')
+          .from('deportista')
           .select('id_deportista')
           .eq('correo', userEmail)
           .single();
